@@ -1,7 +1,7 @@
 ---
 controller_templates:
   - name: SERVER / RHEL9 - Register
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: server_register.yml
     inventory: Workshop Inventory
     credentials:
@@ -33,7 +33,7 @@ controller_templates:
           required: true
 
   - name: SATELLITE / RHEL - Publish Content View
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: satellite_publish.yml
     inventory: Workshop Inventory
     credentials:
@@ -52,7 +52,7 @@ controller_templates:
           required: true
 
   - name: SATELLITE / RHEL - Promote Content View
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: satellite_promote.yml
     inventory: Workshop Inventory
     credentials:
@@ -79,7 +79,7 @@ controller_templates:
           required: true
 
   - name: SATELLITE / Refresh manifest
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: satellite_manifest_refresh.yml
     inventory: Workshop Inventory
     credentials:
@@ -87,14 +87,14 @@ controller_templates:
       - Workshop Credential
 
   - name: SATELLITE / Resume paused tasks
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: satellite_hammer_task_resume.yml
     inventory: Workshop Inventory
     credentials:
       - Workshop Credential
 
   - name: SATELLITE / Resource Info
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: query_satellite_resource_info_survey.yml
     inventory: Workshop Inventory
     credentials:
@@ -117,7 +117,7 @@ controller_templates:
           required: true
 
   - name: SATELLITE / Performance Tuning
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: setup_satellite_tuning.yml
     inventory: Workshop Inventory
     credentials:
@@ -125,7 +125,7 @@ controller_templates:
       - Workshop Credential
 
   - name: SERVER / Register 
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: server_register_dynamic_inv.yml
     inventory: EC2 Dynamic Inventory
     credentials:
@@ -146,7 +146,7 @@ controller_templates:
     ask_limit_on_launch: true
 
   - name: SERVER / Unregister 
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: server_unregister.yml
     inventory: EC2 Dynamic Inventory
     credentials:
@@ -167,7 +167,7 @@ controller_templates:
     ask_limit_on_launch: true
 
   - name: OS / Patch OS to latest
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: server_patch.yml
     inventory: EC2 Dynamic Inventory
     use_fact_cache: true
@@ -228,7 +228,7 @@ controller_templates:
 
   - name: SERVER / Start node via ec2_node_tools
     description: Start node - selection via EC2 instance tags
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: node_startup.yml
     inventory: Workshop Inventory
     limit: control
@@ -242,7 +242,7 @@ controller_templates:
 
   - name: SERVER / Stop node via ec2_node_tools
     description: Stop node - selection via EC2 instance tags
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: node_shutdown.yml
     inventory: Workshop Inventory
     limit: control
@@ -256,7 +256,7 @@ controller_templates:
 
   - name: UTILITY / Snapshot Instance
     description: Node snapshot actions - selection via dynamic inventory group
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: snapshot_instance_lvm.yml
     inventory: EC2 Dynamic Inventory
     credentials:
@@ -303,7 +303,7 @@ controller_templates:
 
   - name: UTILITY / Expand logical volume and associated filesystem
     description: Expand logical volume - selection via dynamic inventory group
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: extend_lvm.yml
     inventory: EC2 Dynamic Inventory
     credentials:
@@ -327,7 +327,7 @@ controller_templates:
 
   - name: UTILITY / Clear yum cache
     description: Take node snapshot - selection via dynamic inventory group
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: clear_yum_cache.yml
     inventory: EC2 Dynamic Inventory
     credentials:
@@ -346,7 +346,7 @@ controller_templates:
 
   - name: ZZ / UTILITY / Take EC2 EBS snapshot of node
     description: Take node snapshot - selection via EC2 instance tags
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: snapshot_instance_ec2.yml
     inventory: Workshop Inventory
     limit: control
@@ -360,7 +360,7 @@ controller_templates:
 
   - name: ZZ / UTILITY / Revert node EC2 EBS snapshot
     description: Revert snapshot - selection via EC2 instance tags
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: snapshot_revert_ec2.yml
     inventory: Workshop Inventory
     limit: control
@@ -374,7 +374,7 @@ controller_templates:
 
   - name: ZZ / UTILITY / Delete node EC2 EBS snapshot
     description: Delete snapshot - selection via EC2 snapshot tags
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: snapshot_delete_ec2.yml
     inventory: Workshop Inventory
     limit: control
@@ -387,7 +387,7 @@ controller_templates:
 
   - name: EC2 / Set instance tags based on Satellite facts
     description: Set instance tags - selection via existing EC2 instance tags
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: query_satellite_resource_info_hosts_set_instance_tags.yml
     inventory: Workshop Inventory
     credentials:
@@ -402,7 +402,7 @@ controller_templates:
 
   - name: EC2 / Set instance tag - RHEL
     description: Set instance tag - app_stack_name and groups provided via extra_vars dict
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: set_instance_tags.yml
     inventory: Workshop Inventory
     extra_vars:
@@ -420,7 +420,7 @@ controller_templates:
 
   - name: EC2 / Get instance details via ec2_node_tools role
     description: Utilize ec2_node_tools role to display info available per instance/node
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: node_details_via_ec2_node_tools.yml
     inventory: Workshop Inventory
     credentials:
@@ -434,7 +434,7 @@ controller_templates:
           short_name: node*
 
   - name: CONTROLLER / Update inventories via dynamic sources
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: controller_inventory_source_update.yml
     inventory: Workshop Inventory
     credentials:
@@ -459,7 +459,7 @@ controller_templates:
           required: true
 
   - name: Z / CaC / Satellite
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: setup_satellite.yml
     inventory: Workshop Inventory
     credentials:
@@ -472,7 +472,7 @@ controller_templates:
 
   - name: Z / SETUP / Cockpit - Web Console
     description: Install and configure Cockpit Web Console for all nodes
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: setup_cockpit.yml
     inventory: Workshop Inventory
     credentials:
@@ -486,7 +486,7 @@ controller_templates:
       workshop_dns_zone: "{{ lookup('env', 'AWX_HOST').split('.',2)[2] }}"
 
   - name: UTILITY / Extend partition and resize physical volume
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: partition_lvm_resize.yml
     inventory: Workshop Inventory
     credentials:
@@ -498,7 +498,7 @@ controller_templates:
       perform_resize: true
 
   - name: UTILITY / Extend logical volumes and filesystems
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: filesystem_extend.yml
     inventory: EC2 Dynamic Inventory
     credentials:
@@ -525,7 +525,7 @@ controller_templates:
           size: 8G
 
   - name: Z / SETUP / Miscellaneous host config
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: misc_host_config.yml
     inventory: EC2 Dynamic Inventory
     credentials:
@@ -544,7 +544,7 @@ controller_templates:
     ask_limit_on_launch: true
 
   - name: Z / SETUP / Disable transparent hugepages
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: disable_transparent_hugepages.yml
     inventory: Workshop Inventory
     credentials:
@@ -554,7 +554,7 @@ controller_templates:
 
   - name: EC2 / Instance action
     description: Perform EC2 instance actions - instance details, start, or stop
-    project: Automated Management
+    project: RH-ISAM Automation
     playbook: ec2_instance_action.yml
     inventory: Workshop Inventory
     credentials:

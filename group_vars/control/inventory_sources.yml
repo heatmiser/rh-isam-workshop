@@ -113,7 +113,7 @@ controller_inventory_sources:
     inventory: EXAMPLE dynamic project inventory
     source: scm
     execution_environment: auto_satellite workshop execution environment
-    source_project: Automated Management
+    source_project: RH-ISAM Automation
     source_path: inventory/inventory_rhel9_dev.aws_ec2.yml
     overwrite: true
     update_on_launch: false
