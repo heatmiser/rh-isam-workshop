@@ -1,0 +1,19 @@
+---
+- name: Miscellaneous host configuration
+  hosts: "{{ dynamic_inventory_group | default(omit) }}"
+  strategy: free
+  gather_facts: true
+  become: true
+  force_handlers: true
+  tasks:
+    - name: Configure RHEL9 systems
+      when:
+        - "ansible_distribution == 'RedHat'"
+        - "ansible_distribution_major_version | int == 9"
+      ansible.builtin.import_tasks: misc_host_config_rhel9.yml
+
+  handlers:
+    - name: "Rebuild grub.cfg"
+      ansible.builtin.command: >-
+        grub2-mkconfig -o /boot/grub2/grub.cfg
+...

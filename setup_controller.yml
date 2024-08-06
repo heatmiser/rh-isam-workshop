@@ -1,0 +1,46 @@
+---
+- hosts: "{{ HOSTS | default('control[0]') }}"
+  connection: local
+  vars:
+    controller_infra_workloads:
+      - infra.controller_configuration.execution_environments
+      - infra.controller_configuration.projects
+      - infra.controller_configuration.inventories
+      - infra.controller_configuration.inventory_sources
+      - infra.controller_configuration.notification_templates
+      - infra.controller_configuration.groups
+      - infra.controller_configuration.job_templates
+      - infra.controller_configuration.workflow_job_templates
+    controller_hostname: "{{ lookup('env', 'TOWER_HOST') }}"
+    #controller_hostname: "{{ hostvars[inventory_hostname].ansible_fqdn }}"
+    controller_validate_certs: false
+
+  tasks:
+    - name: Slurp dynamic_development_source_vars.yaml
+      ansible.builtin.slurp: src=files/dynamic_development_source_vars.yaml
+      register: dynamic_development_source_vars_slurped
+
+    - ansible.builtin.set_fact:
+        dynamic_development_source_vars: "{{ dynamic_development_source_vars_slurped['content'] | b64decode }}"
+
+    # Gather EC2 metadata facts
+    - amazon.aws.ec2_metadata_facts:
+  
+    - ansible.builtin.set_fact:
+        workshop_ec2_region: "{{ ansible_ec2_instance_identity_document_region }}"
+
+    - ansible.builtin.debug:
+        msg: "{{ dynamic_development_source_vars }}"
+
+# Allow projects to pull collections via collections/requirements.yml
+    - name: Turn on AWX_COLLECTIONS_ENABLED on controller
+      awx.awx.settings:
+        name: AWX_COLLECTIONS_ENABLED
+        value: true
+        controller_host: "{{ lookup('env', 'TOWER_HOST') }}"
+        validate_certs: false
+
+    - name: Call dispatch role
+      ansible.builtin.include_role:
+        name: infra.controller_configuration.dispatch
+...

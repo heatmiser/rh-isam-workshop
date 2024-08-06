@@ -1,0 +1,13 @@
+---
+controller_projects:
+  - name: Fact Scan
+    organization: Default
+    scm_type: git
+    scm_url: 'https://github.com/heatmiser/awx-facts-playbooks.git'
+
+  - name: Demo Project
+    organization: Default
+    # scm_type: git
+    # scm_url: 'https://github.com/ansible/ansible-tower-samples.git'
+    state: absent
+...

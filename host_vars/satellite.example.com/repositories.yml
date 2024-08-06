@@ -1,0 +1,14 @@
+---
+satellite_products:
+  - name: Red Hat Enterprise Linux for x86_64
+    repository_sets:
+      - name: "Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)"
+        releasever: "9.4"
+      - name: "Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)"
+        releasever: "9.4"
+  - name: Extra Packages for Enterprise Linux 9
+    repositories:
+      - name: Extra Packages for Enterprise Linux 9 x86_64
+        content_type: yum
+        url: https://download.fedoraproject.org/pub/epel/9/Everything/x86_64/
+...
