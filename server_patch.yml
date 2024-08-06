@@ -1,0 +1,118 @@
+---
+- name: Patch/Update OS 
+  hosts: "{{ dynamic_inventory_group | default(omit) }}"
+  strategy: free
+  gather_facts: false
+  become: true
+  vars:
+    update_check_only: true
+    include_kernel_updates: true
+    exclude_package_list: []
+    include_startup_delay: false
+  pre_tasks:
+    - name: Register output of 'yum repolist all'
+      ansible.builtin.shell: |
+        set -o pipefail
+        yum repolist all --verbose | grep Repo-baseurl | grep -v convert2rhel
+      args:
+        executable: /bin/bash
+      register: yum_repolist_for_baseurl
+      changed_when: yum_repolist_for_baseurl.rc != 0
+
+  tasks:
+    - name: Wait for connection...and gather facts
+      ansible.builtin.setup:
+        gather_timeout: 60
+      register: setup_result
+      ignore_errors: true
+      until: "setup_result is not failed"
+      retries: 10
+      delay: 10
+
+    - name: Set exclude_package_list for kernel-related packages
+      ansible.builtin.set_fact:
+        exclude_package_list: "kernel*"
+      when: not include_kernel_updates | bool
+
+    - name: Randomized startup delay...
+      when: include_startup_delay
+      ansible.builtin.command: |
+        python3 -c 'import time;import random;zzzzz=random.uniform(10.0,60.0);time.sleep(zzzzz);print(zzzzz)'
+      delegate_to: localhost
+      connection: local
+
+    - name: Update EL 7 OS to latest packages available
+      ansible.builtin.yum:
+        name: '*'
+        state: latest # noqa package-latest
+        exclude: "{{ exclude_package_list }}"
+      check_mode: "{{ update_check_only }}"
+      register: package_updates_register
+      when:
+        - ansible_distribution_major_version | int == 7
+        - not yum_repolist_for_baseurl.stdout | d('false') | regex_search('pulp\/content\/.*\/' + dynamic_inventory_group + '\/.*Oracle_Linux_7Server')
+
+    - name: Update OracleLinux 7 OS to latest packages available
+      ansible.builtin.yum:
+        name: '*'
+        state: latest # noqa package-latest
+        exclude:
+          - "{{ exclude_package_list }}"
+          - rhn-client-tools
+      check_mode: "{{ update_check_only }}"
+      register: package_updates_register
+      when:
+        - ansible_distribution_major_version | int == 7
+        - yum_repolist_for_baseurl.stdout | d('false') | regex_search('pulp\/content\/.*\/' + dynamic_inventory_group + '\/.*Oracle_Linux_7Server')
+
+    - name: Update RHEL 8/9 OS to latest packages available
+      ansible.builtin.dnf:
+        name: '*'
+        state: latest # noqa package-latest
+        exclude: "{{ exclude_package_list | }}"
+      check_mode: "{{ update_check_only }}"
+      register: package_updates_register
+      when: ansible_distribution_major_version | int >= 8
+
+    - name: Reboot server
+      ansible.builtin.reboot:
+      register: reboot_result
+      when: include_kernel_updates | bool and not update_check_only | bool
+
+    - name: Wait for connection...
+      ansible.builtin.wait_for_connection:
+        connect_timeout: 20
+        sleep: 5
+        delay: 5
+        timeout: 300
+
+    - name: Find any CentOS*.repo files that might have been placed in /etc/yum.repos.d
+      ansible.builtin.find:
+        paths: /etc/yum.repos.d
+        patterns: 'CentOS*repo'
+      register: centos_repos_files
+      when:
+        - ansible_distribution_major_version | int == 7
+        - ansible_distribution == 'CentOS'
+
+    - name: Remove CentOS*.repo files that were found
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ centos_repos_files.files | default([]) }}"
+      when:
+        - ansible_distribution_major_version | int == 7
+        - ansible_distribution == 'CentOS'
+
+    - name: Output package updates dictionary
+      ansible.builtin.debug:
+        msg: "{{ package_updates_register }}"
+
+    - name: Updated package list
+      ansible.builtin.debug:
+        msg: "{% if item[0] in packages %}{{ packages[item[0]][0].version }}-{{ packages[item[0]][0].release }}.{{ packages[item[0]][0].arch }} >>> {{ item[1] }} {% else %} {{ item[1] }}{% endif %}"
+      loop: "{{ package_updates_register.changes.updated }}"
+      loop_control:
+        label: "{{ item[0] }}"
+      when: package_updates_register.changes is defined
+...
