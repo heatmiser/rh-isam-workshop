@@ -1,0 +1,35 @@
+---
+# https://devpress.csdn.net/cicd/62ec1d2689d9027116a10320.html
+- name: satellite_repository_sync workloads Task Group
+  block:
+  - name: Increment retry count
+    set_fact:
+      sync_subtasks_retry_count: "{{ 0 if sync_subtasks_retry_count is undefined else sync_subtasks_retry_count | int + 1 }}"
+  - name: Resume failed Satellite tasks after each failed attempt
+    ansible.builtin.include_tasks: satellite_hammer_task_resume_subtasks.yml
+    when: sync_subtasks_retry_count | int != 0
+
+  - name: List repositories to sync
+    ansible.builtin.debug:
+      msg: "{{ content_view.repositories | map(attribute='name') | list | unique }}"
+    with_items: "{{ satellite_content_views | default([]) }}"
+    loop_control:
+      loop_var: content_view
+
+  - name: Loop on repositories to sync
+    ansible.builtin.include_tasks: 'satellite_repository_sync_include.yml'
+    with_items: "{{ satellite_content_views | default([]) }}"
+    loop_control:
+      loop_var: content_view
+
+  rescue:
+    - fail:
+        msg: Maximum retries of grouped tasks reached
+      # initial try plus 3 retries = 4 total tries
+      when: sync_subtasks_retry_count | int == 3
+
+    - debug:
+        msg: "satellite_repository_sync workloads Task Group failed, retry count: {{ sync_subtasks_retry_count }}"
+
+    - ansible.builtin.include_tasks: satellite_repository_sync_subtasks.yml
+...

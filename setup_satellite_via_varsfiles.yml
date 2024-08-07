@@ -1,0 +1,36 @@
+---
+- hosts: "{{ HOSTS | default('satellite.example.com') }}"
+  connection: local
+  gather_facts: false
+  vars:
+    satellite_validate_certs: true
+    async_timeout: 10800
+    async_delay: 15
+
+  tasks:
+    - name: Check satellite status
+      redhat.satellite.status_info:
+        validate_certs: "{{ satellite_validate_certs }}"
+
+    - name: Include RHEL8 Satellite CaC via vars files
+      ansible.builtin.include_vars:
+        dir: config_as_code/satellite/rhel8
+      when: satellite_cac_scenario == 'RHEL8'
+
+    - name: Include RHEL9 Satellite CaC via vars files
+      ansible.builtin.include_vars:
+        dir: config_as_code/satellite/rhel9
+      when: satellite_cac_scenario == 'RHEL9'
+
+    - name: Include setup_satellite_infra_subtasks
+      ansible.builtin.include_tasks: setup_satellite_infra_subtasks.yml
+
+    - name: Include satellite_repository_sync_subtasks
+      ansible.builtin.include_tasks: satellite_repository_sync_subtasks.yml
+      when: sync_repository | default(true) | bool
+
+    - name: execute content_views role
+      ansible.builtin.import_role:
+        name: "content_views"
+      delegate_to: localhost
+...

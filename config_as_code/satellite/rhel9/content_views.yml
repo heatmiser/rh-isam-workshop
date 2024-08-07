@@ -1,0 +1,34 @@
+---
+satellite_content_views:
+  # Red Hat Enterprise Linux 9.2
+  - name: RHEL92
+    content_view: RHEL92
+    content_view_update: true
+    lifecycle_environments:
+      - "RHEL92_Dev"
+      - "RHEL92_QA"
+      - "RHEL92_Prod"
+    repositories:
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS RPMs 9.2
+        product: Red Hat Enterprise Linux for x86_64
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream RPMs 9.2
+        product: Red Hat Enterprise Linux for x86_64
+      - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 RPMs
+        product: Red Hat Enterprise Linux for x86_64
+
+  # Red Hat Enterprise Linux 9.4
+  - name: RHEL94
+    content_view: RHEL94
+    content_view_update: true
+    lifecycle_environments:
+      - "RHEL94_Dev"
+      - "RHEL94_QA"
+      - "RHEL94_Prod"
+    repositories:
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS RPMs 9.4
+        product: Red Hat Enterprise Linux for x86_64
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream RPMs 9.4
+        product: Red Hat Enterprise Linux for x86_64
+      - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 RPMs
+        product: Red Hat Enterprise Linux for x86_64
+...
