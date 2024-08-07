@@ -591,6 +591,29 @@ controller_templates:
             - Prod
           required: true
 
+  - name: Z / CaC / Satellite / RHEL scenario
+    project: RH-ISAM Automation
+    playbook: setup_satellite_via_varsfiles.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Satellite Credential
+      - Workshop Credential
+    extra_vars:
+      refresh_satellite_manifest: false
+    ask_variables_on_launch: true
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Choose RHEL scenario to prepare on Satellite
+          type: multiplechoice
+          variable: satellite_cac_scenario
+          choices:
+            - RHEL8
+            - RHEL9
+          required: true
+
   - name: Demo Job Template
     state: absent
 ...
