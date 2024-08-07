@@ -1,5 +1,5 @@
 ---
 controller_execution_environments:
-  - name: auto_satellite workshop execution environment
-    image: quay.io/acme_corp/auto_satellite_ee:latest
+  - name: rh-isam workshop execution environment
+    image: quay.io/acme_corp/rh-isam-ee:latest
 ...

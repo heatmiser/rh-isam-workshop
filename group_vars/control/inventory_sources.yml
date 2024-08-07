@@ -4,7 +4,7 @@ controller_inventory_sources:
     inventory: EC2 Dynamic Inventory
     credential: Inventory Credential
     source: satellite6
-    execution_environment: auto_satellite workshop execution environment
+    execution_environment: rh-isam workshop execution environment
     update_on_launch: false
     overwrite: true
     host_filter: node*
@@ -112,7 +112,7 @@ controller_inventory_sources:
   - name: inventory_rhel9_dev.aws_ec2
     inventory: EXAMPLE dynamic project inventory
     source: scm
-    execution_environment: auto_satellite workshop execution environment
+    execution_environment: rh-isam workshop execution environment
     source_project: RH-ISAM Automation
     source_path: inventory/inventory_rhel9_dev.aws_ec2.yml
     overwrite: true
