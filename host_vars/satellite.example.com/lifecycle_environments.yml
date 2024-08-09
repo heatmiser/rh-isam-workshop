@@ -1,0 +1,12 @@
+---
+satellite_lifecycle_environments:
+  # Red Hat Enterprise Linux 9
+  - name: "RHEL9_Dev"
+    prior: "Library"
+  - name: "RHEL9_QA"
+    prior: "RHEL9_Dev"
+  - name: "RHEL9_Prod"
+    prior: "RHEL9_QA"
+all_lifecycle_environments:
+  - name: "all"
+...

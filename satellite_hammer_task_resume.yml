@@ -1,0 +1,7 @@
+---
+- hosts: "{{ HOSTS | default('satellite.example.com') }}"
+  become: true
+  tasks:
+    - name: Satellite hammer tasks
+      ansible.builtin.include_tasks: satellite_hammer_task_resume_subtasks.yml
+...

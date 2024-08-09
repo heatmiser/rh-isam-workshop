@@ -1,0 +1,166 @@
+---
+controller_workflows:
+  - name: Z / SETUP / Workshop
+    description: Workflow for workshop deployment
+    inventory: Workshop Inventory
+    state: present
+    organization: Default
+    survey_enabled: false
+    simplified_workflow_nodes:
+      - identifier: Satellite Performance Tuning
+        unified_job_template: SATELLITE / Performance Tuning
+        organization: Default
+        all_parents_must_converge: false
+        success_nodes:
+          - Disable transparent huge pages on Satellite
+      - identifier: Disable transparent huge pages on Satellite
+        unified_job_template: Z / SETUP / Disable transparent hugepages
+        organization: Default
+        all_parents_must_converge: false
+        success_nodes:
+          - Setup Cockpit Web Console
+      - identifier: Setup Cockpit Web Console
+        unified_job_template: Z / SETUP / Cockpit - Web Console
+        organization: Default
+        all_parents_must_converge: false
+        success_nodes:
+          - Extend partition and resize physical volume
+      - identifier: Extend partition and resize physical volume
+        unified_job_template: UTILITY / Extend partition and resize physical volume
+        organization: Default
+        limit: rhel9
+        all_parents_must_converge: false
+        always_nodes:
+          - Register RHEL9 nodes to Satellite AK RHEL9_Dev
+      - identifier: Register RHEL9 nodes to Satellite AK RHEL9_Dev
+        unified_job_template: SERVER / RHEL9 - Register
+        organization: Default
+        all_parents_must_converge: true
+        extra_data:
+          PREFIX: node
+          env: Dev
+        success_nodes:
+          - Set instance tags based on Satellite facts
+      - identifier: Set instance tags based on Satellite facts
+        unified_job_template: EC2 / Set instance tags based on Satellite facts
+        organization: Default
+        all_parents_must_converge: false
+        success_nodes:
+          - RHEL9 Development inventory source
+      - identifier: RHEL9 Development inventory source
+        unified_job_template: RHEL9 Development
+        organization: Default
+        all_parents_must_converge: false
+        type: inventory_source
+        success_nodes:
+          - Extend logical volumes and filesystems
+      - identifier: Extend logical volumes and filesystems
+        unified_job_template: UTILITY / Extend logical volumes and filesystems
+        organization: Default
+        all_parents_must_converge: false
+        extra_data:
+          dynamic_inventory_group: "all"
+        success_nodes:
+          - Setup miscellaneous host configuration
+      - identifier: Setup miscellaneous host configuration
+        unified_job_template: Z / SETUP / Miscellaneous host config
+        organization: Default
+        all_parents_must_converge: false
+        extra_data:
+          dynamic_inventory_group: "aws_ec2"
+        success_nodes:
+          - Publish Content View 1
+      - identifier: Publish Content View 1
+        unified_job_template: SATELLITE / RHEL - Publish Content View
+        organization: Default
+        all_parents_must_converge: false
+        extra_data:
+          env: Dev
+          content_view: RHEL9
+        success_nodes:
+          - Promote Content View
+      - identifier: Promote Content View
+        unified_job_template: SATELLITE / RHEL - Promote Content View
+        organization: Default
+        all_parents_must_converge: false
+        extra_data:
+          content_view: RHEL9
+          current_lifecycle_environment: RHEL9_Dev
+          lifecycle_environment: RHEL9_QA
+        success_nodes:
+          - Publish Content View 2
+      - identifier: Publish Content View 2
+        unified_job_template: SATELLITE / RHEL - Publish Content View
+        organization: Default
+        all_parents_must_converge: false
+        extra_data:
+          env: Dev
+          content_view: RHEL9
+        success_nodes: []
+
+  - name: Z / Start workshop instances
+    description: Workflow for workshop instance startup
+    inventory: Workshop Inventory
+    state: present
+    organization: Default
+    survey_enabled: false
+    simplified_workflow_nodes:
+      - identifier: EC2 Instance action - start RHEL9 nodes
+        unified_job_template: EC2 / Instance action
+        organization: Default
+        all_parents_must_converge: false
+        extra_data:
+          instance_action: start
+          content_view: RHEL9
+          stage: Dev
+        success_nodes: []
+      - identifier: EC2 Instance action - start Satellite node
+        unified_job_template: EC2 / Instance action
+        organization: Default
+        all_parents_must_converge: false
+        extra_data:
+          instance_action: start
+          content_view: RHEL9
+          stage: Dev
+          instances:
+            tags:
+              guid: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+              Student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+              short_name: satellite
+        success_nodes: []
+
+  - name: Z / Content View Publish and Promote
+    description: Workflow for CV testing
+    inventory: Workshop Inventory
+    state: present
+    organization: Default
+    survey_enabled: false
+    simplified_workflow_nodes:
+      - identifier: Publish Content View 1
+        unified_job_template: SATELLITE / RHEL - Publish Content View
+        organization: Default
+        all_parents_must_converge: false
+        extra_data:
+          env: Dev
+          content_view: RHEL9
+        success_nodes:
+          - Promote Content View
+      - identifier: Promote Content View
+        unified_job_template: SATELLITE / RHEL - Promote Content View
+        organization: Default
+        all_parents_must_converge: false
+        extra_data:
+          content_view: RHEL9
+          current_lifecycle_environment: RHEL9_Dev
+          lifecycle_environment: RHEL9_QA
+        success_nodes:
+          - Publish Content View 2
+      - identifier: Publish Content View 2
+        unified_job_template: SATELLITE / RHEL - Publish Content View
+        organization: Default
+        all_parents_must_converge: false
+        extra_data:
+          env: Dev
+          content_view: RHEL9
+        success_nodes: []
+...

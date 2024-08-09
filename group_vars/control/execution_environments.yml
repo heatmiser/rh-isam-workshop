@@ -1,0 +1,5 @@
+---
+controller_execution_environments:
+  - name: rh-isam workshop execution environment
+    image: quay.io/acme_corp/rh-isam-ee:latest
+...

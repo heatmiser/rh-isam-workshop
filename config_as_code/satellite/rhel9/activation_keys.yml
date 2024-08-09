@@ -1,0 +1,29 @@
+---
+satellite_activation_keys:
+  # Red Hat Enterprise Linux 9.2
+  - name: "RHEL92_Dev"
+    lifecycle_environment: "RHEL92_Dev"
+    content_view: "RHEL92"
+    release_version: "9.2"
+  - name: "RHEL92_QA"
+    lifecycle_environment: "RHEL92_QA"
+    content_view: "RHEL92"
+    release_version: "9.2"
+  - name: "RHEL92_Prod"
+    lifecycle_environment: "RHEL92_Prod"
+    content_view: "RHEL92"
+    release_version: "9.2"
+  # Red Hat Enterprise Linux 9.4
+  - name: "RHEL94_Dev"
+    lifecycle_environment: "RHEL94_Dev"
+    content_view: "RHEL94"
+    release_version: "9.4"
+  - name: "RHEL94_QA"
+    lifecycle_environment: "RHEL94_QA"
+    content_view: "RHEL94"
+    release_version: "9.4"
+  - name: "RHEL94_Prod"
+    lifecycle_environment: "RHEL94_Prod"
+    content_view: "RHEL94"
+    release_version: "9.4"
+...

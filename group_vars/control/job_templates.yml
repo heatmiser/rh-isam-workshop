@@ -1,0 +1,619 @@
+---
+controller_templates:
+  - name: SERVER / RHEL9 - Register
+    project: RH-ISAM Automation
+    playbook: server_register.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Workshop Credential
+    limit: rhel9
+    extra_vars:
+      org_id: "Default_Organization"
+      rhsm_enabled_repos:
+        - rhel-9-for-x86_64-baseos-rpms
+        - rhel-9-for-x86_64-appstream-rpms
+        - satellite-client-6-for-rhel-9-x86_64-rpms
+      include_offset_task_delay: true
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Server Name or Pattern
+          type: text
+          variable: PREFIX
+          required: false
+        - question_name: Choose Environment
+          type: multiplechoice
+          variable: env
+          choices:
+            - Dev
+            - QA
+            - Prod
+          required: true
+
+  - name: SATELLITE / RHEL - Publish Content View
+    project: RH-ISAM Automation
+    playbook: satellite_publish.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Satellite Credential
+    extra_vars:
+      env: Dev
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select Content View
+          variable: content_view
+          type: multiplechoice
+          choices: "{{ hostvars['satellite.example.com']['satellite_content_views'] | selectattr('name', 'match', '^RHEL.*$') | map(attribute='name') | list}}"
+          required: true
+
+  - name: SATELLITE / RHEL - Promote Content View
+    project: RH-ISAM Automation
+    playbook: satellite_promote.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Satellite Credential
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select Content View
+          variable: content_view
+          type: multiplechoice
+          choices: "{{ hostvars['satellite.example.com']['satellite_content_views'] | selectattr('name', 'match', '^RHEL.*$') | map(attribute='name') | list}}"
+          required: true
+        - question_name: Current Lifecycle Environment
+          variable: current_lifecycle_environment
+          type: multiplechoice
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '^RHEL.*$') | map(attribute='name') | list}}"
+          required: true
+        - question_name: Next Lifecycle Environment
+          variable: lifecycle_environment
+          type: multiplechoice
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '^RHEL.*$') | map(attribute='name') | list}}"
+          required: true
+
+  - name: SATELLITE / Refresh manifest
+    project: RH-ISAM Automation
+    playbook: satellite_manifest_refresh.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Satellite Credential
+      - Workshop Credential
+
+  - name: SATELLITE / Resume paused tasks
+    project: RH-ISAM Automation
+    playbook: satellite_hammer_task_resume.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Workshop Credential
+
+  - name: SATELLITE / Resource Info
+    project: RH-ISAM Automation
+    playbook: query_satellite_resource_info_survey.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Satellite Credential
+      - Workshop Credential
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Satellite resource info type
+          type: multiplechoice
+          variable: resource_info_survey
+          choices:
+            - hosts
+            - content_views
+            - lifecycle_environments
+            - activation_keys
+            - repositories
+          required: true
+
+  - name: SATELLITE / Performance Tuning
+    project: RH-ISAM Automation
+    playbook: setup_satellite_tuning.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Satellite Credential
+      - Workshop Credential
+
+  - name: SERVER / Register 
+    project: RH-ISAM Automation
+    playbook: server_register_dynamic_inv.yml
+    inventory: EC2 Dynamic Inventory
+    credentials:
+      - Satellite Credential
+      - Workshop Credential
+    extra_vars:
+      org_id: Default_Organization
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select inventory group
+          type: multiplechoice
+          variable: dynamic_inventory_group
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '.*') | map(attribute='name') | list }}"
+          required: true
+    ask_limit_on_launch: true
+
+  - name: SERVER / Unregister 
+    project: RH-ISAM Automation
+    playbook: server_unregister.yml
+    inventory: EC2 Dynamic Inventory
+    credentials:
+      - Satellite Credential
+      - Workshop Credential
+    extra_vars:
+      org_id: Default_Organization
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select inventory group
+          type: multiplechoice
+          variable: dynamic_inventory_group
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '.*') | map(attribute='name') | list }}"
+          required: true
+    ask_limit_on_launch: true
+
+  - name: OS / Patch OS to latest
+    project: RH-ISAM Automation
+    playbook: server_patch.yml
+    inventory: EC2 Dynamic Inventory
+    use_fact_cache: true
+    credentials:
+      - Workshop Credential
+    extra_vars:
+      include_startup_delay: true
+    ask_variables_on_launch: true
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select inventory group
+          type: multiplechoice
+          variable: dynamic_inventory_group
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '^RHEL.*$') | map(attribute='name') +
+                       hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '^CentOS.*$') | map(attribute='name') +
+                       hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '^OL.*$') | map(attribute='name') +
+                       hostvars['satellite.example.com']['all_lifecycle_environments'] | selectattr('name', 'match', 'all') | map(attribute='name') }}"
+          required: true
+        - question_name: Include kernel updates? (Kernel update will result in system reboot)
+          type: multiplechoice
+          variable: include_kernel_updates
+          choices:
+            - 'yes'
+            - 'no'
+          default: 'yes'
+          required: false
+        - question_name: Check for updates only? Do not patch at this time?
+          type: multiplechoice
+          variable: update_check_only
+          choices:
+            - 'yes'
+            - 'no'
+          default: 'no'
+          required: false
+    ask_limit_on_launch: true
+
+  - name: SERVER / Fact Scan
+    project: Fact Scan
+    playbook: scan_facts.yml
+    inventory: EC2 Dynamic Inventory
+    use_fact_cache: true
+    credentials:
+      - Workshop Credential
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select inventory group
+          type: multiplechoice
+          variable: dynamic_inventory_group
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '^RHEL.*$') | map(attribute='name') | list + hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '^CentOS.*$') | map(attribute='name') | list + hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '^OL.*$') | map(attribute='name') | list }}"
+          required: true
+    ask_limit_on_launch: true
+
+  - name: SERVER / Start node via ec2_node_tools
+    description: Start node - selection via EC2 instance tags
+    project: RH-ISAM Automation
+    playbook: node_startup.yml
+    inventory: Workshop Inventory
+    limit: control
+    extra_vars:
+      ec2_region: "{{ workshop_ec2_region }}"
+      instances:
+        tags:
+          guid: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+          Student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+          short_name: node*
+
+  - name: SERVER / Stop node via ec2_node_tools
+    description: Stop node - selection via EC2 instance tags
+    project: RH-ISAM Automation
+    playbook: node_shutdown.yml
+    inventory: Workshop Inventory
+    limit: control
+    extra_vars:
+      ec2_region: "{{ workshop_ec2_region }}"
+      instances:
+        tags:
+          guid: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+          Student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+          short_name: node*
+
+  - name: UTILITY / Snapshot Instance
+    description: Node snapshot actions - selection via dynamic inventory group
+    project: RH-ISAM Automation
+    playbook: snapshot_instance_lvm.yml
+    inventory: EC2 Dynamic Inventory
+    credentials:
+      - Workshop Credential
+    extra_vars:
+      snapshot_set_name: snap01
+      snapshot_create_snapshot_autoextend_threshold: 70
+      snapshot_create_snapshot_autoextend_percent: 20
+      snapshot_create_boot_backup: true
+      snapshot_create_volumes:
+        - vg: VolGroup00
+          lv: rootVol
+          size: 3G
+        - vg: VolGroup00
+          lv: varVol
+          size: 5G
+        - vg: VolGroup00
+          lv: logVol
+          size: 500M
+        - vg: VolGroup00
+          lv: auditVol
+          size: 100M
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select inventory group
+          type: multiplechoice
+          variable: dynamic_inventory_group
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '.*') | map(attribute='name') | list }}"
+          required: true
+        - question_name: Snapshot action
+          type: multiplechoice
+          variable: lvm_snapshots_action
+          choices:
+            - check
+            - create
+            - revert
+            - remove
+          required: true
+    ask_variables_on_launch: true
+    ask_limit_on_launch: true
+
+  - name: UTILITY / Expand logical volume and associated filesystem
+    description: Expand logical volume - selection via dynamic inventory group
+    project: RH-ISAM Automation
+    playbook: extend_lvm.yml
+    inventory: EC2 Dynamic Inventory
+    credentials:
+      - Workshop Credential
+    extra_vars:
+      volume_group_name: "VolGroup00"
+      logical_volume_name: "varVol"
+      extend_logical_volume_mb: 1024
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select inventory group
+          type: multiplechoice
+          variable: dynamic_inventory_group
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '.*') | map(attribute='name') | list }}"
+          required: true
+    ask_variables_on_launch: true
+    ask_limit_on_launch: true
+
+  - name: UTILITY / Clear yum cache
+    description: Take node snapshot - selection via dynamic inventory group
+    project: RH-ISAM Automation
+    playbook: clear_yum_cache.yml
+    inventory: EC2 Dynamic Inventory
+    credentials:
+      - Workshop Credential
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select inventory group
+          type: multiplechoice
+          variable: dynamic_inventory_group
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '.*') | map(attribute='name') | list }}"
+          required: true
+    ask_limit_on_launch: true
+
+  - name: ZZ / UTILITY / Take EC2 EBS snapshot of node
+    description: Take node snapshot - selection via EC2 instance tags
+    project: RH-ISAM Automation
+    playbook: snapshot_instance_ec2.yml
+    inventory: Workshop Inventory
+    limit: control
+    extra_vars:
+      ec2_region: "{{ workshop_ec2_region }}"
+      instances:
+        tags:
+          short_name: node*
+          guid: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+          Student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+
+  - name: ZZ / UTILITY / Revert node EC2 EBS snapshot
+    description: Revert snapshot - selection via EC2 instance tags
+    project: RH-ISAM Automation
+    playbook: snapshot_revert_ec2.yml
+    inventory: Workshop Inventory
+    limit: control
+    extra_vars:
+      ec2_region: "{{ workshop_ec2_region }}"
+      instances:
+        tags:
+          guid: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+          Student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+          username: ec2-user
+
+  - name: ZZ / UTILITY / Delete node EC2 EBS snapshot
+    description: Delete snapshot - selection via EC2 snapshot tags
+    project: RH-ISAM Automation
+    playbook: snapshot_delete_ec2.yml
+    inventory: Workshop Inventory
+    limit: control
+    extra_vars:
+      ec2_region: "{{ workshop_ec2_region }}"
+      snapshots:
+        tags:
+          guid: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+          Student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+
+  - name: EC2 / Set instance tags based on Satellite facts
+    description: Set instance tags - selection via existing EC2 instance tags
+    project: RH-ISAM Automation
+    playbook: query_satellite_resource_info_hosts_set_instance_tags.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Satellite Credential
+    extra_vars:
+      ec2_region: "{{ workshop_ec2_region }}"
+      instances:
+        tags:
+          guid: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+          Student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+          short_name: node*
+
+  - name: EC2 / Set instance tag - RHEL
+    description: Set instance tag - app_stack_name and groups provided via extra_vars dict
+    project: RH-ISAM Automation
+    playbook: set_instance_tags.yml
+    inventory: Workshop Inventory
+    extra_vars:
+      ec2_region: "{{ workshop_ec2_region }}"
+      instances:
+        tags:
+          guid: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+          Student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+          short_name: node*
+      group_tag_map:
+        node1.example.com: frontends
+        node2.example.com: apps
+        node3.example.com: appdbs
+      app_stack_name: stack01
+
+  - name: EC2 / Get instance details via ec2_node_tools role
+    description: Utilize ec2_node_tools role to display info available per instance/node
+    project: RH-ISAM Automation
+    playbook: node_details_via_ec2_node_tools.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Workshop Credential
+    extra_vars:
+      ec2_region: "{{ workshop_ec2_region }}"
+      instances:
+        tags:
+          guid: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+          Student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+          short_name: node*
+
+  - name: CONTROLLER / Update inventories via dynamic sources
+    project: RH-ISAM Automation
+    playbook: controller_inventory_source_update.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Controller Credential
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select inventory to update
+          variable: content_view
+          type: multiplechoice
+          choices: "{{ hostvars['satellite.example.com']['satellite_content_views'] | selectattr('name', 'defined') | map(attribute='name') | list}}"
+          required: true
+        - question_name: Choose Environment
+          type: multiplechoice
+          variable: env
+          choices:
+            - Dev
+            - QA
+            - Prod
+          required: true
+
+  - name: Z / CaC / Satellite
+    project: RH-ISAM Automation
+    playbook: setup_satellite.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Satellite Credential
+      - Workshop Credential
+    extra_vars:
+      refresh_satellite_manifest: false
+      bulk_load_size: 1000
+    ask_variables_on_launch: true
+
+  - name: Z / SETUP / Cockpit - Web Console
+    description: Install and configure Cockpit Web Console for all nodes
+    project: RH-ISAM Automation
+    playbook: setup_cockpit.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Workshop Credential
+    extra_vars:
+      ec2_region: "{{ workshop_ec2_region }}"
+      instances:
+        tags:
+          Workshop: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+      student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+      workshop_dns_zone: "{{ lookup('env', 'AWX_HOST').split('.',2)[2] }}"
+
+  - name: UTILITY / Extend partition and resize physical volume
+    project: RH-ISAM Automation
+    playbook: partition_lvm_resize.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Workshop Credential
+    ask_limit_on_launch: true
+    ask_variables_on_launch: true
+    extra_vars:
+      full_storage_device_name: /dev/nvme0n1
+      perform_resize: true
+
+  - name: UTILITY / Extend logical volumes and filesystems
+    project: RH-ISAM Automation
+    playbook: filesystem_extend.yml
+    inventory: EC2 Dynamic Inventory
+    credentials:
+      - Workshop Credential
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select inventory group
+          question_description: Use to limit job to selected inventory host group.
+          type: multiplechoice
+          default: ''
+          variable: dynamic_inventory_group
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '^RHEL.*$') | map(attribute='name') +
+                       hostvars['satellite.example.com']['all_lifecycle_environments'] | selectattr('name', 'match', 'all') | map(attribute='name') }}"
+          required: true
+    ask_limit_on_launch: true
+    ask_variables_on_launch: true
+    extra_vars:
+      filesystem_extend_volumes:
+        - vg: VolGroup00
+          lv: varVol
+          size: 8G
+
+  - name: Z / SETUP / Miscellaneous host config
+    project: RH-ISAM Automation
+    playbook: misc_host_config.yml
+    inventory: EC2 Dynamic Inventory
+    credentials:
+      - Workshop Credential
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select inventory group
+          type: multiplechoice
+          variable: dynamic_inventory_group
+          choices: "{{ hostvars['satellite.example.com']['satellite_lifecycle_environments'] | selectattr('name', 'match', '.*') | map(attribute='name') | list + [ 'aws_ec2' ] }}"
+          required: true
+    extra_vars: ''
+    ask_limit_on_launch: true
+
+  - name: Z / SETUP / Disable transparent hugepages
+    project: RH-ISAM Automation
+    playbook: disable_transparent_hugepages.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Workshop Credential
+    extra_vars:
+      HOSTS: satellite.example.com
+
+  - name: EC2 / Instance action
+    description: Perform EC2 instance actions - instance details, start, or stop
+    project: RH-ISAM Automation
+    playbook: ec2_instance_action.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Workshop Credential
+    extra_vars:
+      ec2_region: "{{ workshop_ec2_region }}"
+      x_vars_guid: "{{ lookup('env', 'AWX_HOST' ).split('.')[1] }}"
+      x_vars_Student: "{{ lookup('env', 'AWX_HOST').split('.')[0] | urlsplit('hostname') }}"
+    ask_variables_on_launch: true
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Select EC2 instance action
+          type: multiplechoice
+          variable: instance_action
+          choices:
+            - instance_details
+            - start
+            - stop
+          required: true
+        - question_name: Select OS target
+          variable: content_view
+          type: multiplechoice
+          choices: "{{ hostvars['satellite.example.com']['satellite_content_views'] | selectattr('name', 'defined') | map(attribute='name') | list}}"
+          required: true
+        - question_name: Select Environment stage
+          type: multiplechoice
+          variable: stage
+          choices:
+            - Dev
+            - QA
+            - Prod
+          required: true
+
+  - name: Z / CaC / Satellite / RHEL scenario
+    project: RH-ISAM Automation
+    playbook: setup_satellite_via_varsfiles.yml
+    inventory: Workshop Inventory
+    credentials:
+      - Satellite Credential
+      - Workshop Credential
+    extra_vars:
+      refresh_satellite_manifest: false
+    ask_variables_on_launch: true
+    survey_enabled: true
+    survey:
+      name: ''
+      description: ''
+      spec:
+        - question_name: Choose RHEL scenario to prepare on Satellite
+          type: multiplechoice
+          variable: satellite_cac_scenario
+          choices:
+            - RHEL8
+            - RHEL9
+          required: true
+
+  - name: Demo Job Template
+    state: absent
+...

@@ -1,0 +1,17 @@
+---
+satellite_lifecycle_environments:
+  # Red Hat Enterprise Linux 9.2
+  - name: "RHEL92_Dev"
+    prior: "Library"
+  - name: "RHEL92_QA"
+    prior: "RHEL92_Dev"
+  - name: "RHEL92_Prod"
+    prior: "RHEL92_QA"
+  # Red Hat Enterprise Linux 9.4
+  - name: "RHEL94_Dev"
+    prior: "Library"
+  - name: "RHEL94_QA"
+    prior: "RHEL94_Dev"
+  - name: "RHEL94_Prod"
+    prior: "RHEL94_QA"
+...
